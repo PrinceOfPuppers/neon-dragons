@@ -25,5 +25,6 @@ class Config:
         self.screenSize=[1000,1000]
 
         self.debug=False
+        self.round=8
 
 config=Config()

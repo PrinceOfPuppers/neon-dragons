@@ -173,24 +173,60 @@ class Snake:
         self.currentPoints=[]
         self.segmentMag=segmentLength*startingSpeed
 
+
+        
+        
+
+    def grabAssets(self):
         #fits head to any segmentlength/speed combo
-        self.headSkin,self.neckRadius=stalkerAssets.scaleHead(self)
+        self.headSkin,self.neckRadius,self.styleType,self.transformaitonLengths=stalkerAssets.scaleHead(self)
         self.headSkinMags=[]
         self.headSkinAngles=[]
-        self.headSkinLen=len(stalkerAssets.head)
+        self.headSkinLen=len(self.headSkin)
 
-        self.eye,self.iris,self.irisCenter,self.irisOffset=stalkerAssets.scaleEye(self)
+        self.eye,self.iris,self.pupil=stalkerAssets.scaleEye(self)
 
         self.eyeMags=[]
         self.eyeAngles=[]
-        self.eyeLen=len(stalkerAssets.eye)
+        self.eyeLen=len(self.eye)
 
         self.irisMags=[]
         self.irisAngles=[]
-        self.irisLen=len(stalkerAssets.iris)
-        
-        
+        self.irisLen=len(self.iris)
 
+        self.pupilMags=[]
+        self.pupilAngles=[]
+        self.pupilLen=len(self.pupil)
+
+        #prepares data regarding the head of the snake to be used by the skin rendering method
+        for point in self.headSkin:
+            mag=round(sqrt(point[0]**2 + point[1]**2),config.round)
+            self.headSkinMags.append(mag)
+            
+            angle=round(giveAngleSigned(point,(0,1)),config.round)
+            self.headSkinAngles.append(angle)
+
+        #prepares data for the eye and iris
+        for point in self.eye:
+            mag=round(sqrt(point[0]**2 + point[1]**2),config.round)
+            self.eyeMags.append(mag)
+            
+            angle=round(giveAngleSigned(point,(0,1)),config.round)
+            self.eyeAngles.append(angle)
+
+        for point in self.iris:
+            mag=round(sqrt(point[0]**2 + point[1]**2),config.round)
+            self.irisMags.append(mag)
+            
+            angle=round(giveAngleSigned(point,(0,1)),config.round)
+            self.irisAngles.append(angle)
+        
+        for point in self.pupil:
+            mag=round(sqrt(point[0]**2 + point[1]**2),config.round)
+            self.pupilMags.append(mag)
+            
+            angle=round(giveAngleSigned(point,(0,1)),config.round)
+            self.pupilAngles.append(angle)
 
         
 
@@ -213,32 +249,8 @@ class Snake:
 
         for i in range(0,self.length):
             self.currentPoints.append([0,0])
-
-        #prepares data regarding the head of the snake to be used by the skin rendering method
-        for point in self.headSkin:
-            mag=round(sqrt(point[0]**2 + point[1]**2),2)
-            self.headSkinMags.append(mag)
-            
-            angle=round(giveAngleSigned(point,(0,1)),2)
-            self.headSkinAngles.append(angle)
-
-        #prepares data for the eye and iris
-        for point in self.eye:
-            mag=round(sqrt(point[0]**2 + point[1]**2),2)
-            self.eyeMags.append(mag)
-            
-            angle=round(giveAngleSigned(point,(0,1)),2)
-            self.eyeAngles.append(angle)
-
-        for point in self.iris:
-            mag=round(sqrt(point[0]**2 + point[1]**2),2)
-            self.irisMags.append(mag)
-            
-            angle=round(giveAngleSigned(point,(0,1)),2)
-            self.irisAngles.append(angle)
         
-        self.irisCenterMag=round(sqrt(self.irisCenter[0]**2 +self.irisCenter[1]**2 ))
-        self.irisCenterAngle=round(giveAngleSigned(self.irisCenter,(0,1)),2)
+        self.grabAssets()
 
 
     def changeSnakeSize(self,newSize):
@@ -306,6 +318,21 @@ class Snake:
         if self.length<=2:
             self.dead=True
 
+        #checks if style of snake needs to be changed
+        styleType=self.styleType
+        for i in range(0,len(self.transformaitonLengths)):
+            transformationLength=self.transformaitonLengths[i]
+            if self.length>=transformationLength:
+                print("styleType increased")
+                styleType+=1
+                print(styleType,self.styleType)
+            else:
+                break
+        
+        if styleType!=self.styleType:
+            print("grabbing assets")
+            self.styleType=styleType
+            self.grabAssets()
 
         
         
@@ -331,6 +358,7 @@ class Snake:
     def updateAndDisplay(self,other,screenSize):
         self._applyAndRecordTickMotion()
         didEatOtherSnake(self,other)
+
         for i in range(0,self.length):
             
             segmentPosistionIndex=(self.headIndexInPosistionList-i*self.segmentLength)%self.positionListLength
@@ -347,11 +375,14 @@ class Snake:
 
                 if self.playerNumber==2:
                     pg.draw.circle(gameDisplay,(255,int(colorMod*255),255),(x,y),3,1)
-        self.renderSkin(other)
-
+        
+        if self.length>2 and other.length>2:
+            self.renderSkin(other)
+        
+#render eye,render stripe and render body segment are all controled by render skin
     def renderBodySegment(self,segmentNumber,previousVec,passPoints):
         bodyVec=(self.currentPoints[segmentNumber+1][0]-self.currentPoints[segmentNumber][0],self.currentPoints[segmentNumber+1][1]-self.currentPoints[segmentNumber][1])
-        bodyAngle=round(giveAngleSigned(previousVec,bodyVec),2)
+        bodyAngle=round(giveAngleSigned(previousVec,bodyVec),config.round)
         
         
         rightBodyPoint=(-1*previousVec[1]*self.neckRadius/self.segmentMag,previousVec[0]*self.neckRadius/self.segmentMag)
@@ -408,34 +439,37 @@ class Snake:
         point1Y=self.eyeMags[0]*cos(headAngle+self.eyeAngles[0])+self.currentPoints[0][1]
         pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
 
-        #iris rendering
-        irisCenterX=self.irisCenterMag*sin(headAngle+self.irisCenterAngle)
-        irisCenterY=self.irisCenterMag*cos(headAngle+self.irisCenterAngle)
-        otherVec=(self.currentPoints[0][0]-other.currentPoints[0][0],self.currentPoints[0][1]-other.currentPoints[0][1])
-        otherDistance=sqrt(otherVec[0]**2+otherVec[1]**2)
-        irisOffset=(self.irisOffset*otherVec[0]/otherDistance,self.irisOffset*otherVec[1]/otherDistance)
+        #iris rendering note, iris doesnt automatically connect back to the end
+        
         for i in range(0,self.irisLen-1):
-            point1X=self.irisMags[i]*sin(headAngle+self.irisAngles[i])+self.currentPoints[0][0]+irisCenterX-irisOffset[0]
-            point1Y=self.irisMags[i]*cos(headAngle+self.irisAngles[i])+self.currentPoints[0][1]+irisCenterY-irisOffset[1]
+            point1X=self.irisMags[i]*sin(headAngle+self.irisAngles[i])+self.currentPoints[0][0]
+            point1Y=self.irisMags[i]*cos(headAngle+self.irisAngles[i])+self.currentPoints[0][1]
 
-            point2X=self.irisMags[i+1]*sin(headAngle+self.irisAngles[i+1])+self.currentPoints[0][0]+irisCenterX-irisOffset[0]
-            point2Y=self.irisMags[i+1]*cos(headAngle+self.irisAngles[i+1])+self.currentPoints[0][1]+irisCenterY-irisOffset[1]
+            point2X=self.irisMags[i+1]*sin(headAngle+self.irisAngles[i+1])+self.currentPoints[0][0]
+            point2Y=self.irisMags[i+1]*cos(headAngle+self.irisAngles[i+1])+self.currentPoints[0][1]
             pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
         
-        point1X=self.irisMags[0]*sin(headAngle+self.irisAngles[0])+self.currentPoints[0][0]+irisCenterX-irisOffset[0]
-        point1Y=self.irisMags[0]*cos(headAngle+self.irisAngles[0])+self.currentPoints[0][1]+irisCenterY-irisOffset[1]
+        point1X=self.irisMags[0]*sin(headAngle+self.irisAngles[0])+self.currentPoints[0][0]
+        point1Y=self.irisMags[0]*cos(headAngle+self.irisAngles[0])+self.currentPoints[0][1]
         pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
 
+        pupilDraw=[]
+        for i in range(0,self.pupilLen-1):
+            point1X=self.pupilMags[i]*sin(headAngle+self.pupilAngles[i])+self.currentPoints[0][0]
+            point1Y=self.pupilMags[i]*cos(headAngle+self.pupilAngles[i])+self.currentPoints[0][1]
+
+            
+            point2X=self.pupilMags[i+1]*sin(headAngle+self.pupilAngles[i+1])+self.currentPoints[0][0]
+            point2Y=self.pupilMags[i+1]*cos(headAngle+self.pupilAngles[i+1])+self.currentPoints[0][1]
+            pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
+
+        
     def renderStripe(self):
-        for i in range(0,self.length-1):
+        for i in range(1,self.length-1):
             colorMod=255*i/(self.length-1)
             point1=self.currentPoints[i]
             point2=self.currentPoints[i+1]
             pg.draw.aaline(gameDisplay,(0,0,int(colorMod)),point1,point2)
-
-            
-
-
 
 
     def renderSkin(self,other):
@@ -444,7 +478,7 @@ class Snake:
 
         #first render head and eye seperatly
         headVec=(self.currentPoints[0][0]-self.currentPoints[1][0],self.currentPoints[0][1]-self.currentPoints[1][1])
-        headAngle=-1*round(giveAngleSigned(headVec,(0,1)),2)
+        headAngle=-1*round(giveAngleSigned(headVec,(0,1)),config.round)
         self.renderEye(other,headAngle)
         self.renderStripe()
 
@@ -460,7 +494,7 @@ class Snake:
 
         neckVec=(self.currentPoints[2][0]-self.currentPoints[1][0],self.currentPoints[2][1]-self.currentPoints[1][1])
         
-        neckAngle=round(giveAngleSigned(headVec,neckVec),2)
+        neckAngle=round(giveAngleSigned(headVec,neckVec),config.round)
 
         rightNeckPoint=(neckVec[1]*self.neckRadius/self.segmentMag,-1*neckVec[0]*self.neckRadius/self.segmentMag)
         leftNeckPoint=(-1*neckVec[1]*self.neckRadius/self.segmentMag,neckVec[0]*self.neckRadius/self.segmentMag)

@@ -36,13 +36,23 @@ Devlopment Goals
 
 -add insta-death to snakes that stray off screen
 
+-fix logic for determining which head is used
+
+-add in self intersection and eating
+
 -adding menu and win/replay screen
 
 -have cut off segments drop an orb proportional to how many segments where cut off 
 
 -add monitor resolution option in menu
 
--fix iris offset to look better
+-greatly increase hitbox of orbs
+
+-change appearence of orbs (have it be seperate from the hitbox size)
+
+-add different head for player 2
+
+-changing player tail based on length, similar to the heads
 
 -change name of project to somthing more suitable
 ----------------
