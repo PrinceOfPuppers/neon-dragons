@@ -86,9 +86,7 @@ def didEatOtherSnake(snake1,snake2):
 
         snake2Point1=snake2.previousPosistions[snake2Index1]
         snake2Point2=snake2.previousPosistions[snake2Index2]
-        if config.debug:
-            colorMod=i/snake2.length
-            pg.draw.aaline(gameDisplay,(int(255*colorMod),int(255*colorMod),255),snake2Point1,snake2Point2)
+    
         if doLineSegmentsIntersect(snake1Point1,snake1Point2,snake2Point1,snake2Point2):
             #mutual eat
             if i+1==snake2.length-1:
@@ -428,7 +426,12 @@ class Snake:
         point1Y=self.irisMags[0]*cos(headAngle+self.irisAngles[0])+self.currentPoints[0][1]+irisCenterY-irisOffset[1]
         pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
 
-            
+    def renderStripe(self):
+        for i in range(0,self.length-1):
+            colorMod=255*i/(self.length-1)
+            point1=self.currentPoints[i]
+            point2=self.currentPoints[i+1]
+            pg.draw.aaline(gameDisplay,(0,0,int(colorMod)),point1,point2)
 
             
 
@@ -443,6 +446,7 @@ class Snake:
         headVec=(self.currentPoints[0][0]-self.currentPoints[1][0],self.currentPoints[0][1]-self.currentPoints[1][1])
         headAngle=-1*round(giveAngleSigned(headVec,(0,1)),2)
         self.renderEye(other,headAngle)
+        self.renderStripe()
 
         for i in range(0,self.headSkinLen-1):
             point1X=self.headSkinMags[i]*sin(headAngle+self.headSkinAngles[i])+self.currentPoints[0][0]
