@@ -30,19 +30,21 @@ GamePlay:
 
 Devlopment Goals
 ----------------
+-change config to yaml
+
 -refactor code to have a cleaner main file, as well as adding a proper main function
 
--improve look of snakes by having the segments be circles rather than lines, current apperence is for easier debugging 
-
--add screen wrapping to snakes, current hurtle is with making this work with the collision detection
+-add insta-death to snakes that stray off screen
 
 -adding menu and win/replay screen
 
--adding orb that changes the speed and potentially the turning speed of the snakes
-
 -have cut off segments drop an orb proportional to how many segments where cut off 
 
--add monitor resolution option in menu 
+-add monitor resolution option in menu
+
+-fix iris offset to look better
+
+-change name of project to somthing more suitable
 ----------------
 
 

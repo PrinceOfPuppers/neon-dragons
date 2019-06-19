@@ -24,4 +24,6 @@ class Config:
         self.frameRate=60
         self.screenSize=[1000,1000]
 
+        self.debug=False
+
 config=Config()

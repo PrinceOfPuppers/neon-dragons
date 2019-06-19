@@ -1,8 +1,9 @@
 import pygame as pg
-from math import sin,cos,pi
+from math import sin,cos,pi,sqrt,acos
 import numpy as np
 from config import config
 import orb as rb
+from assets import StalkerAssets
 
 
 pg.init()
@@ -12,11 +13,45 @@ screenSize=config.screenSize
 frameRate=config.frameRate
 tickNumber=0
 gameDisplay = pg.display.set_mode((screenSize[0], screenSize[1]))
-gameOver=False
 gameLength=config.gameLength
+stalkerAssets=StalkerAssets()
 
+def rotateVector(vector,angle):
+    lengthSquared=vector[0]**2+vector[1]**2
+    if vector[0]!=0:
+        quantity=1+(vector[1]**2)/(vector[0]**2)
+        ycomp=(lengthSquared/vector[0])*(sin(angle)+(vector[1]/vector[0])*cos(angle))/quantity
+        xcomp=(lengthSquared*cos(angle)-vector[1]*ycomp)/vector[0]
+    elif vector[1]!=0:
+        quantity=1+(vector[0]**2)/(vector[1]**2)
+        xcomp=lengthSquared*((vector[0]/vector[1]*cos(angle)-sin(angle)))/(vector[1]*quantity)
+        ycomp=(lengthSquared*cos(angle)-vector[0]*xcomp)/vector[1]
+    else:
+        return([0,0])
+    return([xcomp,ycomp])
 
+def giveAngleSigned(vec1,vec2):
 
+    if vec1[0]==0 and vec1[1]==0:
+        return(0)
+    if vec2[0]==0 and vec2[1]==0:
+        return(0)
+    dotProd=(vec1[0]*vec2[0])+(vec1[1]*vec2[1])
+    plusOrMinus1=-1
+    #c determines the sign of the angle
+    c=(vec1[0] * vec2[1] - vec1[1] * vec2[0]) / (sqrt((vec1[0] ** 2 + vec1[1] ** 2) * (vec2[0] ** 2 + vec2[1] ** 2)))
+    if c<=0:
+        plusOrMinus1=1
+
+    #this section checks if the input for acos is within its domain (sometimes it gets rounded outside of it)
+    p=dotProd/((sqrt(vec1[0]**2+vec1[1]**2))*(sqrt(vec2[0]**2+vec2[1]**2)))
+    if p>1:
+        p=1
+    elif p<-1:
+        p=-1
+
+    theta=plusOrMinus1*acos(p)
+    return(theta)
 
 def doLineSegmentsIntersect(line1Point1,line1Point2,line2Point1,line2Point2):
     vec1x=line1Point2[0]-line1Point1[0]
@@ -43,7 +78,7 @@ def didEatOtherSnake(snake1,snake2):
 
     snake1Point2=snake1.previousPosistions[snake1Index2]
     snake1Point1=snake1.previousPosistions[snake1Index1]
-    #pg.draw.aaline(gameDisplay,(255,255,255),snake1Point1,snake1Point2)
+    
     for i in range(0,snake2.length-1):
         
         snake2Index1=(i*snake2.segmentLength+snake2.headIndexInPosistionList+1)%snake2.positionListLength
@@ -51,8 +86,9 @@ def didEatOtherSnake(snake1,snake2):
 
         snake2Point1=snake2.previousPosistions[snake2Index1]
         snake2Point2=snake2.previousPosistions[snake2Index2]
-        colorMod=i/snake2.length
-        pg.draw.aaline(gameDisplay,(int(255*colorMod),int(255*colorMod),255),snake2Point1,snake2Point2)
+        if config.debug:
+            colorMod=i/snake2.length
+            pg.draw.aaline(gameDisplay,(int(255*colorMod),int(255*colorMod),255),snake2Point1,snake2Point2)
         if doLineSegmentsIntersect(snake1Point1,snake1Point2,snake2Point1,snake2Point2):
             #mutual eat
             if i+1==snake2.length-1:
@@ -66,11 +102,12 @@ def didEatOtherSnake(snake1,snake2):
                 return(True,False)
     return(False,False)
 
-def getAndApplyControls(p1,p2,tickNumber,gameOver):
+def getAndApplyControls(p1,p2,tickNumber):
     for event in pg.event.get():
         # checks if player has quit
         if event.type == pg.QUIT:
-            return(True)
+            p1.dead=True
+            p2.dead=True
     
     keys = pg.key.get_pressed()
     mouse = pg.mouse.get_pressed()
@@ -95,36 +132,33 @@ def getAndApplyControls(p1,p2,tickNumber,gameOver):
 
     if keys[pg.K_UP]:
         p2.dash(p1,tickNumber)
-    return(gameOver)
 
-def playersHandler(players,gameOver):
+def playersHandler(players):
     #applys all player operations for a single tick
 
     p1=players[0]
     p2=players[1]
     p1.updateAndDisplay(p2,screenSize)
     p2.updateAndDisplay(p1,screenSize)
-    gameOver=getAndApplyControls(p1,p2,tickNumber,gameOver)
-    if p1.dead:
-        print("player 1 died")
-        gameOver=True
-    if p2.dead:
-        print("player 2 died")
-        gameOver=True
-    return(gameOver)
+    getAndApplyControls(p1,p2,tickNumber)
+
+
 
 class Snake:
     #the snake consists of a number of segments who follow the previous path of the head of the snake, the segment length just determines how many ticks ago they follow
     #the position of the snake each tick are recorded each tick to a list, the length of which is dynamically increased depending on how long the snake is
-    def __init__(self,playerNumber,startingSpeed,rotVel,startingLength,segmentLength,dashDistance):
+    def __init__(self,playerNumber,startingSpeed,turningRadius,startingLength,segmentLength,dashDistance):
         #length refers to number of segments
         self.dead=False
         self.playerNumber=playerNumber
         self.length=startingLength
         self.position=[0,0]
         self.rot=0
-        self.rotVel=rotVel
+        self.turningRadius=turningRadius
+        self.rotVel=startingSpeed/turningRadius
         self.speed=startingSpeed
+        
+        #segment length is the number of ticks long it is, it will change with speed
         self.segmentLength=segmentLength
         self.dashDistance=dashDistance
         self.lastTickDashed=-100
@@ -136,6 +170,31 @@ class Snake:
         self.previousPosistions=[]
         self.positionListLength=0
         self.headIndexInPosistionList=0
+
+        #list of points currently in the snake (index zero will always be head)
+        self.currentPoints=[]
+        self.segmentMag=segmentLength*startingSpeed
+
+        #fits head to any segmentlength/speed combo
+        self.headSkin,self.neckRadius=stalkerAssets.scaleHead(self)
+        self.headSkinMags=[]
+        self.headSkinAngles=[]
+        self.headSkinLen=len(stalkerAssets.head)
+
+        self.eye,self.iris,self.irisCenter,self.irisOffset=stalkerAssets.scaleEye(self)
+
+        self.eyeMags=[]
+        self.eyeAngles=[]
+        self.eyeLen=len(stalkerAssets.eye)
+
+        self.irisMags=[]
+        self.irisAngles=[]
+        self.irisLen=len(stalkerAssets.iris)
+        
+        
+
+
+        
 
     def createSnake(self,screenSize):
         #generates a list for recording the previous positions 
@@ -154,14 +213,47 @@ class Snake:
                 positionOfHeadPreviously=[self.position[0],self.position[1]+(self.positionListLength-i)*self.speed]
                 self.previousPosistions.append(positionOfHeadPreviously)
 
+        for i in range(0,self.length):
+            self.currentPoints.append([0,0])
+
+        #prepares data regarding the head of the snake to be used by the skin rendering method
+        for point in self.headSkin:
+            mag=round(sqrt(point[0]**2 + point[1]**2),2)
+            self.headSkinMags.append(mag)
+            
+            angle=round(giveAngleSigned(point,(0,1)),2)
+            self.headSkinAngles.append(angle)
+
+        #prepares data for the eye and iris
+        for point in self.eye:
+            mag=round(sqrt(point[0]**2 + point[1]**2),2)
+            self.eyeMags.append(mag)
+            
+            angle=round(giveAngleSigned(point,(0,1)),2)
+            self.eyeAngles.append(angle)
+
+        for point in self.iris:
+            mag=round(sqrt(point[0]**2 + point[1]**2),2)
+            self.irisMags.append(mag)
+            
+            angle=round(giveAngleSigned(point,(0,1)),2)
+            self.irisAngles.append(angle)
+        
+        self.irisCenterMag=round(sqrt(self.irisCenter[0]**2 +self.irisCenter[1]**2 ))
+        self.irisCenterAngle=round(giveAngleSigned(self.irisCenter,(0,1)),2)
+
+
     def changeSnakeSize(self,newSize):
         sizeDifference=newSize-self.length
         self.length=newSize
         #removes entries from position list and updates the index of the head in the list
         if sizeDifference<=0:
+            #removes elements from current points (points that are being displayed)
+            del self.currentPoints[newSize:]
+
             previousPosistionListLen=self.positionListLength
             numberOfEntriesToRemove=(-1*self.segmentLength*sizeDifference)
-
+            
             if numberOfEntriesToRemove+self.headIndexInPosistionList<previousPosistionListLen:
 
                 upperIndexToDelete=self.headIndexInPosistionList+numberOfEntriesToRemove
@@ -169,8 +261,9 @@ class Snake:
                 del self.previousPosistions[self.headIndexInPosistionList+1 : upperIndexToDelete+1]
 
 
-            else:
 
+            else:
+                
                 del self.previousPosistions[self.headIndexInPosistionList+1:previousPosistionListLen]
 
                 upperIndexToDelete=(self.headIndexInPosistionList+numberOfEntriesToRemove)%previousPosistionListLen
@@ -178,6 +271,10 @@ class Snake:
                 del self.previousPosistions[0:upperIndexToDelete+1]
 
                 self.headIndexInPosistionList-=(self.headIndexInPosistionList+numberOfEntriesToRemove+1)%previousPosistionListLen
+
+                for i in range(0,sizeDifference):
+                    self.currentPoints.append([0,0])
+                
             
             self.positionListLength=len(self.previousPosistions)
             
@@ -185,6 +282,11 @@ class Snake:
                 print("decreaseLength error")
         
         else:
+            #adds dummy data to current point list, they will have the correct info added in update and d
+            for i in range(0,sizeDifference):
+                self.currentPoints.append([0,0])
+            print(self.length,len(self.currentPoints))
+
             print(self.positionListLength)
             previousPosistionListLen=self.positionListLength
             numberOfEntriesToAdd=(self.segmentLength*sizeDifference)
@@ -231,39 +333,205 @@ class Snake:
     def updateAndDisplay(self,other,screenSize):
         self._applyAndRecordTickMotion()
         didEatOtherSnake(self,other)
-
         for i in range(0,self.length):
+            
             segmentPosistionIndex=(self.headIndexInPosistionList-i*self.segmentLength)%self.positionListLength
             segmentPosistion=self.previousPosistions[segmentPosistionIndex]
-            x=int(segmentPosistion[0])
-            y=int(segmentPosistion[1])
-            colorMod=i/self.length
-            if self.playerNumber==1:
-                pg.draw.circle(gameDisplay,(255,255,int(colorMod*255)),(x,y),3,1)
-                
-            if self.playerNumber==2:
-                pg.draw.circle(gameDisplay,(255,int(colorMod*255),255),(x,y),3,1)
+            self.currentPoints[i][0]=segmentPosistion[0]
+            self.currentPoints[i][1]=segmentPosistion[1]
+            #renders points directly from previous posisitions, rather than current point list
+            if config.debug:
+                x=int(segmentPosistion[0])
+                y=int(segmentPosistion[1])
+                colorMod=i/self.length
+                if self.playerNumber==1:
+                    pg.draw.circle(gameDisplay,(255,255,int(colorMod*255)),(x,y),3,1)
+
+                if self.playerNumber==2:
+                    pg.draw.circle(gameDisplay,(255,int(colorMod*255),255),(x,y),3,1)
+        self.renderSkin(other)
+
+    def renderBodySegment(self,segmentNumber,previousVec,passPoints):
+        bodyVec=(self.currentPoints[segmentNumber+1][0]-self.currentPoints[segmentNumber][0],self.currentPoints[segmentNumber+1][1]-self.currentPoints[segmentNumber][1])
+        bodyAngle=round(giveAngleSigned(previousVec,bodyVec),2)
+        
+        
+        rightBodyPoint=(-1*previousVec[1]*self.neckRadius/self.segmentMag,previousVec[0]*self.neckRadius/self.segmentMag)
+        leftBodyPoint=(previousVec[1]*self.neckRadius/self.segmentMag,-1*previousVec[0]*self.neckRadius/self.segmentMag)
+
+        rightNextBodyPoint=(bodyVec[1]*self.neckRadius/self.segmentMag,-1*bodyVec[0]*self.neckRadius/self.segmentMag)
+        leftNextBodyPoint=(-1*bodyVec[1]*self.neckRadius/self.segmentMag,bodyVec[0]*self.neckRadius/self.segmentMag)
+
+        if bodyAngle>=0:
+            #right
+            point2R=(self.currentPoints[segmentNumber][0]+rightBodyPoint[0],self.currentPoints[segmentNumber][1]+rightBodyPoint[1])
+            pg.draw.aaline(gameDisplay,(255,0,0),passPoints[1],point2R)
+            
+            point3R=(self.currentPoints[segmentNumber][0]+rightNextBodyPoint[0],self.currentPoints[segmentNumber][1]+rightNextBodyPoint[1])
+            pg.draw.aaline(gameDisplay,(255,0,0),point2R,point3R)
+
+            #left
+            point3L=(self.currentPoints[segmentNumber][0]+leftNextBodyPoint[0],self.currentPoints[segmentNumber][1]+leftNextBodyPoint[1])
+            pg.draw.aaline(gameDisplay,(255,0,0),passPoints[0],point3L)
+
+            passPoints=(point3L,point3R)
+            
+        else:
+            #right
+            point3R=(self.currentPoints[segmentNumber][0]+rightBodyPoint[0],self.currentPoints[segmentNumber][1]+rightBodyPoint[1])
+            pg.draw.aaline(gameDisplay,(255,0,0),passPoints[1],point3R)
+
+            #left
+            point2L=(self.currentPoints[segmentNumber][0]+leftBodyPoint[0],self.currentPoints[segmentNumber][1]+leftBodyPoint[1])
+            pg.draw.aaline(gameDisplay,(255,0,0),passPoints[0],point2L)
+            
+            point3L=(self.currentPoints[segmentNumber][0]+leftNextBodyPoint[0],self.currentPoints[segmentNumber][1]+leftNextBodyPoint[1])
+            pg.draw.aaline(gameDisplay,(255,0,0),point2L,point3L)
+
+            passPoints=(point3L,point3R)
+
+        previousVec=(-1*bodyVec[0],-1*bodyVec[1])
+
+        return(previousVec,passPoints)
+
+
+    def renderEye(self,other,headAngle):
+        
+        #eye rendering
+        for i in range(0,self.eyeLen-1):
+            point1X=self.eyeMags[i]*sin(headAngle+self.eyeAngles[i])+self.currentPoints[0][0]
+            point1Y=self.eyeMags[i]*cos(headAngle+self.eyeAngles[i])+self.currentPoints[0][1]
+
+            point2X=self.eyeMags[i+1]*sin(headAngle+self.eyeAngles[i+1])+self.currentPoints[0][0]
+            point2Y=self.eyeMags[i+1]*cos(headAngle+self.eyeAngles[i+1])+self.currentPoints[0][1]
+            pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
+
+        point1X=self.eyeMags[0]*sin(headAngle+self.eyeAngles[0])+self.currentPoints[0][0]
+        point1Y=self.eyeMags[0]*cos(headAngle+self.eyeAngles[0])+self.currentPoints[0][1]
+        pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
+
+        #iris rendering
+        irisCenterX=self.irisCenterMag*sin(headAngle+self.irisCenterAngle)
+        irisCenterY=self.irisCenterMag*cos(headAngle+self.irisCenterAngle)
+        otherVec=(self.currentPoints[0][0]-other.currentPoints[0][0],self.currentPoints[0][1]-other.currentPoints[0][1])
+        otherDistance=sqrt(otherVec[0]**2+otherVec[1]**2)
+        irisOffset=(self.irisOffset*otherVec[0]/otherDistance,self.irisOffset*otherVec[1]/otherDistance)
+        for i in range(0,self.irisLen-1):
+            point1X=self.irisMags[i]*sin(headAngle+self.irisAngles[i])+self.currentPoints[0][0]+irisCenterX-irisOffset[0]
+            point1Y=self.irisMags[i]*cos(headAngle+self.irisAngles[i])+self.currentPoints[0][1]+irisCenterY-irisOffset[1]
+
+            point2X=self.irisMags[i+1]*sin(headAngle+self.irisAngles[i+1])+self.currentPoints[0][0]+irisCenterX-irisOffset[0]
+            point2Y=self.irisMags[i+1]*cos(headAngle+self.irisAngles[i+1])+self.currentPoints[0][1]+irisCenterY-irisOffset[1]
+            pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
+        
+        point1X=self.irisMags[0]*sin(headAngle+self.irisAngles[0])+self.currentPoints[0][0]+irisCenterX-irisOffset[0]
+        point1Y=self.irisMags[0]*cos(headAngle+self.irisAngles[0])+self.currentPoints[0][1]+irisCenterY-irisOffset[1]
+        pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
+
+            
+
+            
+
+
+
+
+    def renderSkin(self,other):
+
+        #left and right are with head pointed upwards
+
+        #first render head and eye seperatly
+        headVec=(self.currentPoints[0][0]-self.currentPoints[1][0],self.currentPoints[0][1]-self.currentPoints[1][1])
+        headAngle=-1*round(giveAngleSigned(headVec,(0,1)),2)
+        self.renderEye(other,headAngle)
+
+        for i in range(0,self.headSkinLen-1):
+            point1X=self.headSkinMags[i]*sin(headAngle+self.headSkinAngles[i])+self.currentPoints[0][0]
+            point1Y=self.headSkinMags[i]*cos(headAngle+self.headSkinAngles[i])+self.currentPoints[0][1]
+
+            point2X=self.headSkinMags[i+1]*sin(headAngle+self.headSkinAngles[i+1])+self.currentPoints[0][0]
+            point2Y=self.headSkinMags[i+1]*cos(headAngle+self.headSkinAngles[i+1])+self.currentPoints[0][1]
+            pg.draw.aaline(gameDisplay,(255,0,0),(point1X,point1Y),(point2X,point2Y))
+
+
+
+        neckVec=(self.currentPoints[2][0]-self.currentPoints[1][0],self.currentPoints[2][1]-self.currentPoints[1][1])
+        
+        neckAngle=round(giveAngleSigned(headVec,neckVec),2)
+
+        rightNeckPoint=(neckVec[1]*self.neckRadius/self.segmentMag,-1*neckVec[0]*self.neckRadius/self.segmentMag)
+        leftNeckPoint=(-1*neckVec[1]*self.neckRadius/self.segmentMag,neckVec[0]*self.neckRadius/self.segmentMag)
+
+        if neckAngle<=0:
+            point1X=self.headSkinMags[0]*sin(headAngle+self.headSkinAngles[0])+self.currentPoints[0][0]
+            point1Y=self.headSkinMags[0]*cos(headAngle+self.headSkinAngles[0])+self.currentPoints[0][1]
+            point1=(point1X,point1Y)
+
+            point2X=self.currentPoints[1][0]+leftNeckPoint[0]
+            point2Y=self.currentPoints[1][1]+leftNeckPoint[1]
+            point2=(point2X,point2Y)
+            pg.draw.aaline(gameDisplay,(255,0,0),point1,point2)
+
+            #passPoints are ordered index 0 for left, 1 for right
+
+            point3X=self.headSkinMags[-1]*sin(headAngle+self.headSkinAngles[-1])+self.currentPoints[0][0]
+            point3Y=self.headSkinMags[-1]*cos(headAngle+self.headSkinAngles[-1])+self.currentPoints[0][1]
+            point3=(point3X,point3Y)
+            passPoints=(point2,point3)
+        
+        else:
+            point1X=self.headSkinMags[-1]*sin(headAngle+self.headSkinAngles[-1])+self.currentPoints[0][0]
+            point1Y=self.headSkinMags[-1]*cos(headAngle+self.headSkinAngles[-1])+self.currentPoints[0][1]
+            point1=(point1X,point1Y)
+
+            point2X=self.currentPoints[1][0]+rightNeckPoint[0]
+            point2Y=self.currentPoints[1][1]+rightNeckPoint[1]
+
+            point2=(point2X,point2Y)
+            pg.draw.aaline(gameDisplay,(255,0,0),point1,point2)
+        
+            point3X=self.headSkinMags[0]*sin(headAngle+self.headSkinAngles[0])+self.currentPoints[0][0]
+            point3Y=self.headSkinMags[0]*cos(headAngle+self.headSkinAngles[0])+self.currentPoints[0][1]
+            point3=(point3X,point3Y)
+            #passPoints are ordered index 0 for left, 1 for right
+            passPoints=(point3,point2)
+
+
+
+        previousVec=(-1*neckVec[0],-1*neckVec[1])
+        #self.renderBodySegment(2,previousVec,passPoints)
+        #then render body
+        numberOfLoops=self.length-3
+        for i in range(2,numberOfLoops+2):
+            previousVec,passPoints=self.renderBodySegment(i,previousVec,passPoints)
+            
+
+        #then render tail
+        pg.draw.aaline(gameDisplay,(255,0,0),passPoints[0],self.currentPoints[-1])
+        pg.draw.aaline(gameDisplay,(255,0,0),passPoints[1],self.currentPoints[-1])
 
 
 orbFactory=rb.OrbFactory()
 orbFactory.initalizePools()
 
-p1=Snake(1,3,0.05,5,20,100)
+#snake inputs are as follows
+#playerNumber,startingSpeed,turningRadius,startingLength,segmentLength,dashDistance
+p1=Snake(1,3,70,5,20,100)
 p1.createSnake(screenSize)
 
-p2=Snake(2,3,0.05,5,20,100)
+p2=Snake(2,3,70,5,20,100)
 p2.createSnake(screenSize)
 
 players=[p1,p2]
 numberOfPlayers=len(players)
     
-while not gameOver:
+while not (p1.dead or p2.dead):
     #print(clock)
     tickNumber+=1
-    gameOver=playersHandler(players,gameOver)
+    playersHandler(players)
     rb.updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber)
     if tickNumber%gameLength==0:
-        gameOver=True
+        p1.dead=True
+        p2.dead=True
     
     if tickNumber%config.orbFactoryCallPeriod==0:
         print("orbFactory called")
@@ -278,3 +546,9 @@ while not gameOver:
     #this improves visual effect of dashing by not filling the screen for the tick of a dash
     if not (p1.lastTickDashed-tickNumber==0 or p2.lastTickDashed-tickNumber==0):
         pg.Surface.fill(gameDisplay,(0,0,0))
+    
+    if p1.dead:
+        print("player 1 died")
+    
+    if p2.dead:
+        print("player 2 died")
