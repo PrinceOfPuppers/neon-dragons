@@ -130,11 +130,10 @@ def playersHandler(p1,p2,keys,gameDisplay,tickNumber):
 class Snake:
     #the snake consists of a number of segments who follow the previous path of the head of the snake, the segment length just determines how many ticks ago they follow
     #the position of the snake each tick are recorded each tick to a list, the length of which is dynamically increased depending on how long the snake is
-    def __init__(self,playerNumber,startingSpeed,turningRadius,startingLength,segmentLength,dashDistance):
+    def __init__(self,playerNumber,startingSpeed,turningRadius,segmentLength,dashDistance):
         #length refers to number of segments
         self.dead=False
-        self.playerNumber=playerNumber
-        self.length=startingLength
+        self.playerNumber=playerNumber    
         self.position=[0,0]
         self.rot=0
         self.turningRadius=turningRadius
@@ -151,6 +150,7 @@ class Snake:
         #this way only one element of the list must be changed each tick, a list is used becasuse we will have to increase the size
         #as parameters of the snake are changed (ie length)
         self.previousPosistions=[]
+        self.length=0
         self.positionListLength=0
         self.headIndexInPosistionList=0
         self.color=(255,255,255)
@@ -164,6 +164,7 @@ class Snake:
     def changeTurningRadius(self,turningRadius):
         self.turningRadius=turningRadius
         self.rotVel=self.speed/turningRadius
+    
     def grabAssets(self):
         self.transformaitonLengths=stalkerAssets.transformaitonLengths
         self.styleType=1
@@ -223,25 +224,22 @@ class Snake:
 
         
 
-    def createSnake(self):
-        
+    def createSnake(self,length,turningRadius):
+        #resetsSnake
+        self.lastTickDashed=-100
+        self.dead=False
+        self.changeTurningRadius(turningRadius)
+        self.position=[0,0]
+        self.rot=0
+        self.previousPosistions=[]
+        self.currentPoints=[]
+        self.length=length
+
         #generates a list for recording the previous positions 
         self.positionListLength=(self.length-1)*self.segmentLength+1
         self.headIndexInPosistionList=self.positionListLength-1
+
         for i in range(0,self.positionListLength):
-            #extrpolates where the head would be i ticks ago so the snake doesnt start bunched up
-            #if self.playerNumber==1:
-            #    self.position=[config.screenSize[0]/3,config.screenSize[1]/2]
-            #    positionOfHeadPreviously=[self.position[0],self.position[1]-(self.positionListLength-i)*self.speed]
-            #    self.previousPosistions.append(positionOfHeadPreviously)
-            #
-            #if self.playerNumber==2:
-            #    self.rot=pi
-            #    self.position=[2*config.screenSize[0]/3,config.screenSize[1]/2]
-            #    positionOfHeadPreviously=[self.position[0],self.position[1]+(self.positionListLength-i)*self.speed]
-            #    self.previousPosistions.append(positionOfHeadPreviously)
-            #
-            ##used for menu snakes
             if self.playerNumber==1:
                 self.rot=pi
                 self.position=[config.screenSize[0]/2+self.turningRadius,config.screenSize[1]/2]

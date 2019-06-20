@@ -32,13 +32,13 @@ GamePlay:
 
 Devlopment Goals
 ----------------
--change config to yaml
+-change appearence of orbs to resemble small creatures
+
+-simplify collision checking using current points list
 
 -add insta-death to snakes that stray off screen
 
 -add in self intersection and eating
-
--add win/replay screen
 
 -have cut off segments drop an orb proportional to how many segments where cut off 
 
