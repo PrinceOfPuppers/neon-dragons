@@ -8,7 +8,7 @@ class Config:
         self.sizeChangeOrbRange=3
         self.sizeChangeOrbPositiveBias=2
         
-        self.halfOrbHitbox=5
+        self.halfOrbHitbox=15
 
         #how close can orbs be to getting eaten at spawn
         self.orbSpawnBuffer=10
@@ -22,9 +22,12 @@ class Config:
 
         self.gameLength=18000
         self.frameRate=60
-        self.screenSize=[1000,1000]
+        self.screenSize=[1500,800]
 
         self.debug=False
         self.round=8
 
+        self.turningRadius=70
+        #only thing ever changed in game
+        self.quit=False
 config=Config()

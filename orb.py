@@ -2,6 +2,7 @@ from random import random,uniform
 from config import config
 import pygame as pg
 from math import sin,cos,pi
+from assets import orbAssets
 
 #when implementing new orbs:
 
@@ -12,6 +13,7 @@ from math import sin,cos,pi
 #add to deactivate orbs method
 #add to orbs spawn handler
 #add to update and display orbs funciton
+#add orb to reset pools
 
 
 
@@ -34,11 +36,17 @@ def isSpawnLocationOccupied(spawnLocationX,spawnLocationY,players):
     return(False)
 
 def updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber):
+
     for orb in orbFactory.activeStaticSizeChangeOrbs:
+        #display
+        for i in range(0,orb.pointsLen-1):
+            point1=(orb.position[0]+orb.points[i][0],orb.position[1]+orb.points[i][1])
+            point2=(orb.position[0]+orb.points[i+1][0],orb.position[1]+orb.points[i+1][1])
+            pg.draw.aaline(gameDisplay,orb.color,point1,point2)
+        point1=(orb.position[0]+orb.points[0][0],orb.position[1]+orb.points[0][1])
+        pg.draw.aaline(gameDisplay,orb.color,point1,point2)
 
-        position=(int(orb.position[0]),int(orb.position[1]))
-        pg.draw.circle(gameDisplay,orb.color,position,config.halfOrbHitbox,1)
-
+        #check if eaten
         for player in players:
             if orb.wasOrbEaten(player):
                 print("pre eat size:",player.length)
@@ -51,9 +59,15 @@ def updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber):
     for orb in orbFactory.activeMovingSizeChangeOrbs:
         orb.wander(tickNumber)
 
-        position=(int(orb.position[0]),int(orb.position[1]))
-        pg.draw.circle(gameDisplay,orb.color,position,config.halfOrbHitbox,1)
-
+        #display
+        for i in range(0,orb.pointsLen-1):
+            point1=(orb.position[0]+orb.points[i][0],orb.position[1]+orb.points[i][1])
+            point2=(orb.position[0]+orb.points[i+1][0],orb.position[1]+orb.points[i+1][1])
+            pg.draw.aaline(gameDisplay,orb.color,point1,point2)
+        point1=(orb.position[0]+orb.points[0][0],orb.position[1]+orb.points[0][1])
+        pg.draw.aaline(gameDisplay,orb.color,point1,point2)
+        
+        #check if eaten
         for player in players:
             if orb.wasOrbEaten(player):
                 print("pre eat size:",player.length)
@@ -181,7 +195,12 @@ class OrbFactory:
             self.activeMovingSizeChangeOrbs.remove(orb)
             self.inactiveMovingSizeChangeOrbs.append(orb)
 
-
+    def resetPools(self):
+        for orb in self.activeStaticSizeChangeOrbs:
+            self.deactivateOrb(orb)
+        
+        for orb in self.activeMovingSizeChangeOrbs:
+            self.deactivateOrb(orb)
 
 
 
@@ -260,6 +279,8 @@ class StaticSizeChangeOrb(_StaticOrb):
     def __init__(self,startLocationX=-1,startLocationY=-1,sizeChange=0):
 
         super().__init__(startLocationX,startLocationY)
+        self.points=orbAssets.StaticSizeChangeOrb
+        self.pointsLen=len(self.points)
         self.sizeChange=sizeChange
         self.type=(0,0)
 
@@ -267,11 +288,17 @@ class MovingSizeChangeOrb(_MovingOrb):
 
     def __init__(self,startLocationX=-1,startLocationY=-1,sizeChange=0,erraticness=2,thrust=10,mass=100):
         super().__init__(startLocationX,startLocationY,erraticness,thrust,mass)
+        self.points=orbAssets.MovingSizeChangeOrb
+        self.pointsLen=len(self.points)
         self.sizeChange=sizeChange
         self.type=(1,0)
 
 
 #speed changing orbs
+
+
+
+orbFactory=OrbFactory()
 
 
 

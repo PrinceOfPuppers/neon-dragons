@@ -14,7 +14,7 @@ class StalkerAssets:
         self.head3=[[-1,-5.5],[-3,-1.5],[-0.8,1.14],[-2.3,-1.5],[-1.4,-2.8],[-0.8,-1.4],[-0.8,-2.8],[0,0],[0.8,-2.8],[0.8,-1.4], [1.4,-2.8],[2.3,-1.5],[0.8,1.14],[3,-1.5],[1,-5.5]]
         self.eye3=[[0.0,-4.4],[-1.2,-3.6],[0.0,-2.8],[1.2,-3.6]]
         self.iris3=[[0.0,-4.4],[0.4,-3.6],[0.0,-2.8],[-0.4,-3.6]]
-        self.pupil3=[[0.0,-2.8],[0.0,-4.4]]
+        self.pupil3=[[0.0,-3],[0.0,-4]]
 
         #this is segmentLength times speed
         self.assumedSegmentLength=5.5
@@ -24,22 +24,11 @@ class StalkerAssets:
         self.transformaitonLengths=[10,15]
 
     def scaleHead(self,player):
-        #note this is always run first, so it sets the style type of the player, which in turn will be read by the
-        #other scale methods
-        #head types are 1 ,2 , ...
-        styleType=1
-        for i in range(0,len(self.transformaitonLengths)):
-            transformationLength=self.transformaitonLengths[i]
-            if player.length>=transformationLength:
-                styleType+=1
-            
-            else:
-                break
-        print(styleType)
+        
         segmentLength=player.speed*player.segmentLength
         scalingRatio=segmentLength/self.assumedSegmentLength
 
-        if styleType==1:
+        if player.styleType==1:
             scaledHead=[]
             for point in self.head1:
                 newPoint=[point[0]*scalingRatio,point[1]*scalingRatio]
@@ -47,7 +36,7 @@ class StalkerAssets:
 
             scaledNeckRadius=self.assumedNeckRadius*scalingRatio
 
-        elif styleType==2:
+        elif player.styleType==2:
             scaledHead=[]
             for point in self.head2:
                 newPoint=[point[0]*scalingRatio,point[1]*scalingRatio]
@@ -55,7 +44,7 @@ class StalkerAssets:
 
             scaledNeckRadius=self.assumedNeckRadius*scalingRatio
 
-        elif styleType==3:
+        elif player.styleType==3:
             scaledHead=[]
             for point in self.head3:
                 newPoint=[point[0]*scalingRatio,point[1]*scalingRatio]
@@ -63,7 +52,7 @@ class StalkerAssets:
 
             scaledNeckRadius=self.assumedNeckRadius*scalingRatio
     
-        return(scaledHead,scaledNeckRadius,styleType,self.transformaitonLengths)
+        return(scaledHead,scaledNeckRadius)
     
     def scaleEye(self,player):
         segmentLength=player.speed*player.segmentLength
@@ -122,8 +111,12 @@ class StalkerAssets:
 
         return(scaledEye,scaledIris,scaledPupil)
 
-    
-        
+class OrbAssets:
+    def __init__(self):
+        self.StaticSizeChangeOrb=[[0.0, 10.0], [-2.0, 2.0], [-10.0, 0.0], [-2.0, -2.0], [0.0, -10.0], [2.0, -2.0], [10.0, 0.0], [2.0, 2.0]]
+        self.MovingSizeChangeOrb=[[0.0, 10.0], [-2.0, 2.0], [-10.0, 0.0], [-2.0, -2.0], [0.0, -10.0], [2.0, -2.0], [10.0, 0.0], [2.0, 2.0]]
+orbAssets=OrbAssets()
+stalkerAssets=StalkerAssets()
 
             
 

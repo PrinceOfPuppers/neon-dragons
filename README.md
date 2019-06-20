@@ -3,6 +3,8 @@ A 2 player game I made similar to slither.io, (only realized the similarity afte
 
 Playing The Game
 ----------------
+Click snakes to start
+
 Controls:
     player 1 uses WASD, player 2 use arrow keys
 
@@ -32,23 +34,15 @@ Devlopment Goals
 ----------------
 -change config to yaml
 
--refactor code to have a cleaner main file, as well as adding a proper main function
-
 -add insta-death to snakes that stray off screen
-
--fix logic for determining which head is used
 
 -add in self intersection and eating
 
--adding menu and win/replay screen
+-add win/replay screen
 
 -have cut off segments drop an orb proportional to how many segments where cut off 
 
 -add monitor resolution option in menu
-
--greatly increase hitbox of orbs
-
--change appearence of orbs (have it be seperate from the hitbox size)
 
 -add different head for player 2
 
