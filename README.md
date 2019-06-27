@@ -45,13 +45,13 @@ have the snake form properly in that direction)
 
 -have cut off segments drop an orb proportional to how many segments where cut off 
 
--add monitor resolution option in menu
-
 -add different head for player 2
 
 -changing player tail based on length, similar to the heads
 
 -change name of project to somthing more suitable
+
+-improve preformance of dashing 
 ----------------
 
 

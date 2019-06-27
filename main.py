@@ -4,14 +4,22 @@ from orb import orbFactory,updateAndDisplayOrbs
 import pygame as pg
 from menu import Button,TextBox
 
+
+
+
+
 tickNumber=0
 gameLength=config.gameLength
 frameRate=config.frameRate
+
 screenSize=config.screenSize
+
 orbFactory.initalizePools()
 gameDisplay = pg.display.set_mode((config.screenSize[0], config.screenSize[1]))
 pg.init()
 pg.display.set_caption("")
+
+
 
 def getControls():
     keys=pg.key.get_pressed()
@@ -89,14 +97,15 @@ def startGame(clock,p1,p2,TextBox):
 def startScreen(clock):
     
     startButton=Button((screenSize[0]/2,screenSize[1]/2),250,250,[],(255,255,255),False)
-    titleTextBox=TextBox('NEON DRAGONS',(255,0,0),[screenSize[0]/2,screenSize[1]/4],50)
+    titleTextBox=TextBox('NEON DRAGONS',(255,0,0),[screenSize[0]/2,screenSize[1]/4],config.textCharacterWidth)
     titleTextBox.initalizeTextBox()
 
-    p1=Snake(1,3,100,20,100)
-    p1.createSnake(5,100)
+    #playerNumber,startingSpeed,turningRadius,segmentLength,dashDistance
+    p1=Snake(1,config.snakeSpeed,config.menuTurningRadius,config.segmentLength,100)
+    p1.createSnake(5,config.menuTurningRadius)
 
-    p2=Snake(2,3,100,20,100)
-    p2.createSnake(5,100)
+    p2=Snake(2,config.snakeSpeed,config.menuTurningRadius,config.segmentLength,100)
+    p2.createSnake(5,config.menuTurningRadius)
 
     while not (startButton.wasPressed or config.quit):
         for event in pg.event.get():
@@ -126,8 +135,8 @@ def startScreen(clock):
 
     p1.color=(255,0,0)
     p2.color=(255,0,0)
-    p1.changeTurningRadius(config.turningRadius)
-    p2.changeTurningRadius(config.turningRadius)
+    p1.changeTurningRadius(config.normalTurningRadius)
+    p2.changeTurningRadius(config.normalTurningRadius)
     return(p1,p2,titleTextBox)
 
 def endScreen(clock,p1,p2):
@@ -142,10 +151,10 @@ def endScreen(clock,p1,p2):
         else:
             text="MUTUAL KILL"
     
-    p1.createSnake(5,100)
-    p2.createSnake(5,100)
+    p1.createSnake(5,config.menuTurningRadius)
+    p2.createSnake(5,config.menuTurningRadius)
 
-    endTextBox=TextBox(text,(255,0,0),[screenSize[0]/2,screenSize[1]/4],50)
+    endTextBox=TextBox(text,(255,0,0),[screenSize[0]/2,screenSize[1]/4],config.textCharacterWidth)
     endTextBox.initalizeTextBox()
 
     #fades in end text
@@ -187,8 +196,8 @@ def endScreen(clock,p1,p2):
 
     p1.color=(255,0,0)
     p2.color=(255,0,0)
-    p1.changeTurningRadius(config.turningRadius)
-    p2.changeTurningRadius(config.turningRadius)
+    p1.changeTurningRadius(config.normalTurningRadius)
+    p2.changeTurningRadius(config.normalTurningRadius)
     return(endTextBox)
 
 def main():

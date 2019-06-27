@@ -1,3 +1,28 @@
+import tkinter
+root=tkinter.Tk()
+
+def scaleToResolution(screenSize):
+    devWidth=1500
+    userWidth=screenSize[0]
+    widthRatio=userWidth/devWidth
+
+    #the constant number in each is the desired value when screen width is 1500
+    segmentLength=int(round(20*widthRatio))
+
+    normalTurningRadius=int(round(70*widthRatio))
+
+    menuTurningRadius=int(round(100*widthRatio))
+
+    halfOrbHitBox=int(round(15*widthRatio))
+    snakeSpeed=3*widthRatio
+
+    textCharacterWidth=int(round(50*widthRatio))
+
+    return(segmentLength,halfOrbHitBox,normalTurningRadius,menuTurningRadius,snakeSpeed,textCharacterWidth)
+
+
+
+
 class Config:
 
     def __init__(self):
@@ -8,7 +33,6 @@ class Config:
         self.sizeChangeOrbRange=3
         self.sizeChangeOrbPositiveBias=2
         
-        self.halfOrbHitbox=15
 
         #how close can orbs be to getting eaten at spawn
         self.orbSpawnBuffer=10
@@ -22,12 +46,19 @@ class Config:
 
         self.gameLength=18000
         self.frameRate=60
-        self.screenSize=[1500,800]
+
 
         self.debug=False
         self.round=5
 
-        self.turningRadius=70
+        #monitor scaling stuff
+        screenWidth=root.winfo_screenwidth()-100
+        screenHeight=root.winfo_screenheight()-100
+        screenSize=[screenWidth,screenHeight]
+        #screenSize=[500,500]
+        self.screenSize=screenSize
+        self.segmentLength,self.halfOrbHitbox,self.normalTurningRadius,self.menuTurningRadius,self.snakeSpeed,self.textCharacterWidth=scaleToResolution(screenSize)
+
         #only thing ever changed in game
         self.quit=False
 config=Config()
