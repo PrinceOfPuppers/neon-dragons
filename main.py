@@ -191,7 +191,6 @@ def endScreen(clock,p1,p2):
     p2.changeTurningRadius(config.turningRadius)
     return(endTextBox)
 
-
 def main():
     clock = pg.time.Clock()
     p1,p2,currentTextBox=startScreen(clock)
@@ -200,5 +199,7 @@ def main():
         orbFactory.resetPools()
         currentTextBox=endScreen(clock,p1,p2)
         orbFactory.resetPools()
-main()
+
+if __name__ == "__main__":
+    main()
 pg.quit()

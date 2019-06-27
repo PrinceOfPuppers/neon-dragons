@@ -201,8 +201,6 @@ class Snake:
             self.currentPoints.append([0,0])
         
         self.grabAssets()
-
-   
         
     def changeTurningRadius(self,turningRadius):
         self.turningRadius=turningRadius
@@ -264,8 +262,6 @@ class Snake:
             
             angle=round(giveAngleSigned(point,(0,1)),config.round)
             self.pupilAngles.append(angle)
-
-        
 
     def changeSnakeSize(self,newSize):
         sizeDifference=newSize-self.length
@@ -387,12 +383,18 @@ class Snake:
                 if self.playerNumber==2:
                     pg.draw.circle(gameDisplay,(255,int(colorMod*255),255),(x,y),3,1)
         
+        #checks self intersection
+        if self.length>2:
+            didSnakeEatSelf(self)
+        
+        if other.length>2:
+            didSnakeEatSelf(other)
+
+        #checks eating and renders snakes
         if self.length>2 and other.length>2:
             self.renderSkin(other,gameDisplay)
-            didEatOtherSnake(self,other)
-            didSnakeEatSelf(self)
-            didSnakeEatSelf(other)
-        
+            didEatOtherSnake(self,other)   
+
         #checks if either player is offscreen
         if isPointOffScreeen(self.position,config):
             self.dead=True
