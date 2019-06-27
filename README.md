@@ -32,13 +32,16 @@ GamePlay:
 
 Devlopment Goals
 ----------------
--change appearence of orbs to resemble small creatures
+-clean and expand upon player constructor, allowing for more control over spawning characteristics (ie set locaiton and initial rotation and
+have the snake form properly in that direction)
 
--simplify collision checking using current points list
+-have config only created in main (proper main) function and passed to functions that need it 
 
--add insta-death to snakes that stray off screen
+-simplify and refactor main
 
--add in self intersection and eating
+-add particle effect on dead and on head change
+
+-maybe have game pause on dead for a second when displaying particles
 
 -have cut off segments drop an orb proportional to how many segments where cut off 
 

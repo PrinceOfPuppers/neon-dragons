@@ -19,7 +19,6 @@ def getControls():
 
 def gameLoop(p1,p2,clock,tickNumber):
     while not (p1.dead or p2.dead or config.quit):
-        print(clock)
         tickNumber+=1
         keys=getControls()
         playersHandler(p1,p2,keys,gameDisplay,tickNumber)

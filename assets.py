@@ -1,3 +1,4 @@
+from config import config
 class StalkerAssets:
     def __init__(self):
         self.head1=[[-1, -5.5],[-1.5,-2.0],[-0.8,1.14],[-0.4,-1.0],[0.0,0.0],[0.4,-1.0],[0.8,1.14],[1.5,-2.0],[1,-5.5]]
@@ -113,8 +114,48 @@ class StalkerAssets:
 
 class OrbAssets:
     def __init__(self):
-        self.StaticSizeChangeOrb=[[0.0, 10.0], [-2.0, 2.0], [-10.0, 0.0], [-2.0, -2.0], [0.0, -10.0], [2.0, -2.0], [10.0, 0.0], [2.0, 2.0]]
-        self.MovingSizeChangeOrb=[[0.0, 10.0], [-2.0, 2.0], [-10.0, 0.0], [-2.0, -2.0], [0.0, -10.0], [2.0, -2.0], [10.0, 0.0], [2.0, 2.0]]
+        self.StaticSizeChangeOrb=[[[0, 3], [1, 2]], [[0, 3], [1, 4]], [[1, 4], [1, 5]], [[1, 5], [2, 5]], [[2, 5], [3, 6]], [[3, 6], [4, 5]], [[4, 5], [5, 5]], [[5, 5], [5, 4]], [[5, 4], [6, 3]], [[6, 3], [5,2]], [[5, 2], [5, 1]], [[5, 1], [4, 1]], [[4, 1], [3, 0]], [[3, 0], [2, 1]], [[2, 1], [1, 1]], [[1, 1], [1, 2]], [[2, 3], [3, 4]], [[3, 4], [4, 3]], [[4, 3], [3, 2]], [[3, 2], [2, 3]]]
+        self.assumedStaticSizeChangeOrbWidth=6
+        self.assumedStaticSizeChangeOrbOrigin=[3,3]
+        
+        self.MovingSizeChangeOrb=[[[0, 3], [1, 2]], [[0, 3], [1, 4]], [[1, 4], [1, 5]], [[1, 5], [2, 5]], [[2, 5], [3, 6]], [[3, 6], [4, 5]], [[4, 5], [5, 5]], [[5, 5], [5, 4]], [[5, 4], [6, 3]], [[6, 3], [5,2]], [[5, 2], [5, 1]], [[5, 1], [4, 1]], [[4, 1], [3, 0]], [[3, 0], [2, 1]], [[2, 1], [1, 1]], [[1, 1], [1, 2]], [[2, 3], [3, 4]], [[3, 4], [4, 3]], [[4, 3], [3, 2]], [[3, 2], [2, 3]]]
+        self.assumedMovingSizeChangeOrbWidth=6
+        self.assumedMovingSizeChangeOrbOrigin=[3,3]
+
+    def scaleAndTranslateStaticSizeChangeOrb(self,desiredWidth):
+        StaticSizeChangeOrb=[]
+        StaticSizeChangeOrbDetail=[]
+
+        for line in self.StaticSizeChangeOrb:
+            xComp1=round((line[0][0]-self.assumedStaticSizeChangeOrbOrigin[0])*desiredWidth/self.assumedStaticSizeChangeOrbWidth,config.round)
+            yComp1=round((line[0][1]-self.assumedStaticSizeChangeOrbOrigin[1])*desiredWidth/self.assumedStaticSizeChangeOrbWidth,config.round)
+            point1=(xComp1,yComp1)
+
+            xComp2=round((line[1][0]-self.assumedStaticSizeChangeOrbOrigin[0])*desiredWidth/self.assumedStaticSizeChangeOrbWidth,config.round)
+            yComp2=round((line[1][1]-self.assumedStaticSizeChangeOrbOrigin[1])*desiredWidth/self.assumedStaticSizeChangeOrbWidth,config.round)
+            point2=(xComp2,yComp2)
+            StaticSizeChangeOrb.append([point1,point2])
+        
+
+        return(StaticSizeChangeOrb)
+    
+    def scaleAndTranslateMovingSizeChangeOrb(self,desiredWidth):
+        MovingSizeChangeOrb=[]
+        MovingSizeChangeOrbDetail=[]
+        
+        for line in self.MovingSizeChangeOrb:
+            xComp1=round((line[0][0]-self.assumedMovingSizeChangeOrbOrigin[0])*desiredWidth/self.assumedMovingSizeChangeOrbWidth,config.round)
+            yComp1=round((line[0][1]-self.assumedMovingSizeChangeOrbOrigin[1])*desiredWidth/self.assumedMovingSizeChangeOrbWidth,config.round)
+            point1=(xComp1,yComp1)
+
+            xComp2=round((line[1][0]-self.assumedMovingSizeChangeOrbOrigin[0])*desiredWidth/self.assumedMovingSizeChangeOrbWidth,config.round)
+            yComp2=round((line[1][1]-self.assumedMovingSizeChangeOrbOrigin[1])*desiredWidth/self.assumedMovingSizeChangeOrbWidth,config.round)
+            point2=(xComp2,yComp2)
+
+            MovingSizeChangeOrb.append([point1,point2])
+        
+        return(MovingSizeChangeOrb)
+
 orbAssets=OrbAssets()
 stalkerAssets=StalkerAssets()
 

@@ -5,7 +5,12 @@ from config import config
 from orb import orbFactory,updateAndDisplayOrbs
 from assets import stalkerAssets
 
-
+def isPointOffScreeen(point,config):
+    if 0>point[0] or point[0]>config.screenSize[0]:
+        return(True)
+    if 0>point[1] or point[1]>config.screenSize[1]:
+        return(True)
+    return(False)
 
 def rotateVector(vector,angle):
     lengthSquared=vector[0]**2+vector[1]**2
@@ -63,33 +68,37 @@ def doLineSegmentsIntersect(line1Point1,line1Point2,line2Point1,line2Point2):
     return(False)
 
 def didEatOtherSnake(snake1,snake2):
-
-    snake1Index2=snake1.headIndexInPosistionList
-    snake1Index1=(snake1.headIndexInPosistionList-snake1.segmentLength)%snake1.positionListLength
-
-    snake1Point2=snake1.previousPosistions[snake1Index2]
-    snake1Point1=snake1.previousPosistions[snake1Index1]
-    
+    snake1Point1=snake1.currentPoints[0]
+    snake1Point2=snake1.currentPoints[1]
     for i in range(0,snake2.length-1):
-        
-        snake2Index1=(i*snake2.segmentLength+snake2.headIndexInPosistionList+1)%snake2.positionListLength
-        snake2Index2=((i+1)*snake2.segmentLength+snake2.headIndexInPosistionList)%snake2.positionListLength
-
-        snake2Point1=snake2.previousPosistions[snake2Index1]
-        snake2Point2=snake2.previousPosistions[snake2Index2]
+        snake2Point1=snake2.currentPoints[i]
+        snake2Point2=snake2.currentPoints[i+1]
     
         if doLineSegmentsIntersect(snake1Point1,snake1Point2,snake2Point1,snake2Point2):
             #mutual eat
-            if i+1==snake2.length-1:
+            if i==0:
                 snake1.changeSnakeSize(1)
                 snake2.changeSnakeSize(1)
                 return(True,True)
             
             #snake2 ate snake 1
             else:
-                snake2.changeSnakeSize(snake2.length-i-1)
+
+                snake2.changeSnakeSize(i+1)
                 return(True,False)
     return(False,False)
+
+def didSnakeEatSelf(snake):
+    headPoint1=snake.currentPoints[0]
+    headPoint2=snake.currentPoints[1]
+    for i in range(2,snake.length-1):
+        snakePoint1=snake.currentPoints[i]
+        snakePoint2=snake.currentPoints[i+1]
+    
+        if doLineSegmentsIntersect(headPoint1,headPoint2,snakePoint1,snakePoint2):
+            snake.changeSnakeSize(i+1)
+            return(True)
+    return(False)
 
 def applyControls(p1,p2,keys,gameDisplay,tickNumber):
     #keys is a list of bools, layed out as follows (w,a,s,d,up,left,down,right)
@@ -159,7 +168,41 @@ class Snake:
         self.segmentMag=segmentLength*startingSpeed
 
 
+
+    def createSnake(self,length,turningRadius):
+        #resetsSnake
+        self.lastTickDashed=-100
+        self.dead=False
+        self.changeTurningRadius(turningRadius)
+        self.position=[0,0]
+        self.rot=0
+        self.previousPosistions=[]
+        self.currentPoints=[]
+        self.length=length
+
+        #generates a list for recording the previous positions 
+        self.positionListLength=(self.length-1)*self.segmentLength+1
+        self.headIndexInPosistionList=self.positionListLength-1
+
+        for i in range(0,self.positionListLength):
+            if self.playerNumber==1:
+                self.rot=pi
+                self.position=[config.screenSize[0]/2+self.turningRadius,config.screenSize[1]/2]
+                positionOfHeadPreviously=[self.position[0],self.position[1]+(self.positionListLength-i)*self.speed]
+                self.previousPosistions.append(positionOfHeadPreviously)
+            
+            if self.playerNumber==2:
+                
+                self.position=[config.screenSize[0]/2-self.turningRadius,config.screenSize[1]/2]
+                positionOfHeadPreviously=[self.position[0],self.position[1]-(self.positionListLength-i)*self.speed]
+                self.previousPosistions.append(positionOfHeadPreviously)
+
+        for i in range(0,self.length):
+            self.currentPoints.append([0,0])
         
+        self.grabAssets()
+
+   
         
     def changeTurningRadius(self,turningRadius):
         self.turningRadius=turningRadius
@@ -223,40 +266,6 @@ class Snake:
             self.pupilAngles.append(angle)
 
         
-
-    def createSnake(self,length,turningRadius):
-        #resetsSnake
-        self.lastTickDashed=-100
-        self.dead=False
-        self.changeTurningRadius(turningRadius)
-        self.position=[0,0]
-        self.rot=0
-        self.previousPosistions=[]
-        self.currentPoints=[]
-        self.length=length
-
-        #generates a list for recording the previous positions 
-        self.positionListLength=(self.length-1)*self.segmentLength+1
-        self.headIndexInPosistionList=self.positionListLength-1
-
-        for i in range(0,self.positionListLength):
-            if self.playerNumber==1:
-                self.rot=pi
-                self.position=[config.screenSize[0]/2+self.turningRadius,config.screenSize[1]/2]
-                positionOfHeadPreviously=[self.position[0],self.position[1]+(self.positionListLength-i)*self.speed]
-                self.previousPosistions.append(positionOfHeadPreviously)
-            
-            if self.playerNumber==2:
-                
-                self.position=[config.screenSize[0]/2-self.turningRadius,config.screenSize[1]/2]
-                positionOfHeadPreviously=[self.position[0],self.position[1]-(self.positionListLength-i)*self.speed]
-                self.previousPosistions.append(positionOfHeadPreviously)
-
-        for i in range(0,self.length):
-            self.currentPoints.append([0,0])
-        
-        self.grabAssets()
-
 
     def changeSnakeSize(self,newSize):
         sizeDifference=newSize-self.length
@@ -360,7 +369,6 @@ class Snake:
 
     def updateAndDisplay(self,other,gameDisplay):
         self._applyAndRecordTickMotion()
-        didEatOtherSnake(self,other)
 
         for i in range(0,self.length):
             
@@ -381,6 +389,15 @@ class Snake:
         
         if self.length>2 and other.length>2:
             self.renderSkin(other,gameDisplay)
+            didEatOtherSnake(self,other)
+            didSnakeEatSelf(self)
+            didSnakeEatSelf(other)
+        
+        #checks if either player is offscreen
+        if isPointOffScreeen(self.position,config):
+            self.dead=True
+        if isPointOffScreeen(other.position,config):
+            other.dead=True
         
     #render eye,render stripe and render body segment are all controled by render skin
     def renderBodySegment(self,gameDisplay,segmentNumber,previousVec,passPoints):

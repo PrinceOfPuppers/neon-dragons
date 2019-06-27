@@ -38,14 +38,11 @@ def isSpawnLocationOccupied(spawnLocationX,spawnLocationY,players):
 def updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber):
 
     for orb in orbFactory.activeStaticSizeChangeOrbs:
-        #display
-        for i in range(0,orb.pointsLen-1):
-            point1=(orb.position[0]+orb.points[i][0],orb.position[1]+orb.points[i][1])
-            point2=(orb.position[0]+orb.points[i+1][0],orb.position[1]+orb.points[i+1][1])
+        #displays main lines
+        for line in orb.lines:
+            point1=(round(orb.position[0]+line[0][0],config.round),round(orb.position[1]+line[0][1],config.round))
+            point2=(round(orb.position[0]+line[1][0],config.round),round(orb.position[1]+line[1][1],config.round))
             pg.draw.aaline(gameDisplay,orb.color,point1,point2)
-        point1=(orb.position[0]+orb.points[0][0],orb.position[1]+orb.points[0][1])
-        pg.draw.aaline(gameDisplay,orb.color,point1,point2)
-
         #check if eaten
         for player in players:
             if orb.wasOrbEaten(player):
@@ -59,13 +56,11 @@ def updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber):
     for orb in orbFactory.activeMovingSizeChangeOrbs:
         orb.wander(tickNumber)
 
-        #display
-        for i in range(0,orb.pointsLen-1):
-            point1=(orb.position[0]+orb.points[i][0],orb.position[1]+orb.points[i][1])
-            point2=(orb.position[0]+orb.points[i+1][0],orb.position[1]+orb.points[i+1][1])
+        #displays main lines
+        for line in orb.lines:
+            point1=(round(orb.position[0]+line[0][0],config.round),round(orb.position[1]+line[0][1],config.round))
+            point2=(round(orb.position[0]+line[1][0],config.round),round(orb.position[1]+line[1][1],config.round))
             pg.draw.aaline(gameDisplay,orb.color,point1,point2)
-        point1=(orb.position[0]+orb.points[0][0],orb.position[1]+orb.points[0][1])
-        pg.draw.aaline(gameDisplay,orb.color,point1,point2)
         
         #check if eaten
         for player in players:
@@ -279,8 +274,8 @@ class StaticSizeChangeOrb(_StaticOrb):
     def __init__(self,startLocationX=-1,startLocationY=-1,sizeChange=0):
 
         super().__init__(startLocationX,startLocationY)
-        self.points=orbAssets.StaticSizeChangeOrb
-        self.pointsLen=len(self.points)
+        self.lines=orbAssets.scaleAndTranslateStaticSizeChangeOrb(2*config.halfOrbHitbox)
+        self.pointsLen=len(self.lines)
         self.sizeChange=sizeChange
         self.type=(0,0)
 
@@ -288,8 +283,8 @@ class MovingSizeChangeOrb(_MovingOrb):
 
     def __init__(self,startLocationX=-1,startLocationY=-1,sizeChange=0,erraticness=2,thrust=10,mass=100):
         super().__init__(startLocationX,startLocationY,erraticness,thrust,mass)
-        self.points=orbAssets.MovingSizeChangeOrb
-        self.pointsLen=len(self.points)
+        self.lines=orbAssets.scaleAndTranslateMovingSizeChangeOrb(2*config.halfOrbHitbox)
+        self.pointsLen=len(self.lines)
         self.sizeChange=sizeChange
         self.type=(1,0)
 

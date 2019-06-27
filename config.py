@@ -25,7 +25,7 @@ class Config:
         self.screenSize=[1500,800]
 
         self.debug=False
-        self.round=8
+        self.round=5
 
         self.turningRadius=70
         #only thing ever changed in game
