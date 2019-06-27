@@ -7,8 +7,6 @@ def scaleToResolution(screenSize):
     widthRatio=userWidth/devWidth
 
     #the constant number in each is the desired value when screen width is 1500
-    segmentLength=int(round(20*widthRatio))
-
     normalTurningRadius=int(round(70*widthRatio))
 
     menuTurningRadius=int(round(100*widthRatio))
@@ -18,7 +16,7 @@ def scaleToResolution(screenSize):
 
     textCharacterWidth=int(round(50*widthRatio))
 
-    return(segmentLength,halfOrbHitBox,normalTurningRadius,menuTurningRadius,snakeSpeed,textCharacterWidth)
+    return(halfOrbHitBox,normalTurningRadius,menuTurningRadius,snakeSpeed,textCharacterWidth)
 
 
 
@@ -47,7 +45,7 @@ class Config:
         self.gameLength=18000
         self.frameRate=60
 
-
+        self.segmentLength=20
         self.debug=False
         self.round=5
 
@@ -57,7 +55,7 @@ class Config:
         screenSize=[screenWidth,screenHeight]
         #screenSize=[500,500]
         self.screenSize=screenSize
-        self.segmentLength,self.halfOrbHitbox,self.normalTurningRadius,self.menuTurningRadius,self.snakeSpeed,self.textCharacterWidth=scaleToResolution(screenSize)
+        self.halfOrbHitbox,self.normalTurningRadius,self.menuTurningRadius,self.snakeSpeed,self.textCharacterWidth=scaleToResolution(screenSize)
 
         #only thing ever changed in game
         self.quit=False
