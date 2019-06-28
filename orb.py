@@ -46,12 +46,8 @@ def updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber):
         #check if eaten
         for player in players:
             if orb.wasOrbEaten(player):
-                print("pre eat size:",player.length)
                 player.changeSnakeSize(player.length+orb.sizeChange)
                 orbFactory.deactivateOrb(orb)
-                
-                print("orb eaten,sizechange:",orb.sizeChange)
-                print("snakeSize:",player.length)
 
     for orb in orbFactory.activeMovingSizeChangeOrbs:
         orb.wander(tickNumber)
@@ -65,12 +61,16 @@ def updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber):
         #check if eaten
         for player in players:
             if orb.wasOrbEaten(player):
-                print("pre eat size:",player.length)
+
                 player.changeSnakeSize(player.length+orb.sizeChange)
                 orbFactory.deactivateOrb(orb)
-                print("orb eaten,sizechange:",orb.sizeChange)
-                print("snakeSize:",player.length)
 
+
+        
+        
+
+
+    
 
 
 class OrbFactory:
@@ -107,8 +107,6 @@ class OrbFactory:
             self.inactiveMovingSizeChangeOrbs.append(movingSizeChangeOrb)
 
     def spawnHandler(self,tickNumber,players):
-        print(len(self.activeStaticSizeChangeOrbs))
-        print(len(self.activeMovingSizeChangeOrbs))
         #spawn static orb
         if tickNumber%config.staticOrbSpawnPeriod==0:
             
@@ -141,7 +139,6 @@ class OrbFactory:
                             colorMod=int(round(abs(255*sizeChange)/(2*config.sizeChangeOrbRange +config.sizeChangeOrbPositiveBias)))
                             orb.color=(255-colorMod,255,255-colorMod)
 
-                        print("StaticSizeChangeOrbSpawned")
                         self.activeStaticSizeChangeOrbs.append(orb)
 
 
@@ -179,7 +176,6 @@ class OrbFactory:
                             orb.color=(255-colorMod,255,255-colorMod)
 
                         self.activeMovingSizeChangeOrbs.append(orb)
-                        print("movingSizeChangeOrbSpawned")
 
     def deactivateOrb(self,orb):
         if orb.type==(0,0):

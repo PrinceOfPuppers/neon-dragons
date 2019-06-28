@@ -42,13 +42,14 @@ class Config:
         self.movingOrbSpawnPeriod=200
         self.staticOrbSpawnPeriod=100
 
-        self.gameLength=18000
         self.frameRate=60
 
         self.segmentLength=20
         self.debug=False
         self.round=5
 
+        self.sheildDuration=300
+        self.sheildCoolDown=1000
         #monitor scaling stuff
         screenWidth=root.winfo_screenwidth()-100
         screenHeight=root.winfo_screenheight()-100

@@ -12,13 +12,17 @@ Controls:
     A/LeftArrow to move left
     D/RightArrow to move right
 
+    (after first appearence change)
     W/UpArrow to dash forward
+
+    (after second appearence change)
+    S/DownArrow to sheild
 
 
 Goal:
 
     the goal of the game is currently to be the last person alive, you die by having your snake
-    drop below 3 dots in length.
+    drop below 2 segments in length.
 
     In the future I plan to have the games time out after 5 or so minutes and state the winner 
     as the person with the longest snake
@@ -32,19 +36,13 @@ GamePlay:
     You can pick up orbs to increase or decrease your length; green increases, red decreases. 
     the more green/ red the orb, the greater the change.
 
+    eating someone (including yourself) while they're sheilding is an insta-death for you! 
 ----------------
 
 
 
 Devlopment Goals
 ----------------
-
--clean and expand upon player constructor, allowing for more control over spawning characteristics 
-(ie set locaiton and initial rotation and have the snake form properly in that direction)
-
--have config only created in main (proper main) function and passed to functions that need it 
-
--simplify and refactor main
 
 -add particle effect on dead and on head change
 
@@ -53,12 +51,6 @@ Devlopment Goals
 -have cut off segments drop an orb proportional to how many segments where cut off 
 
 -add different head for player 2
-
--changing player tail based on length, similar to the heads
-
--change name of project to somthing more suitable
-
--improve preformance of dashing 
 
 ----------------
 

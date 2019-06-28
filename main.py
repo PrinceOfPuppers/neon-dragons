@@ -9,7 +9,6 @@ from menu import Button,TextBox
 
 
 tickNumber=0
-gameLength=config.gameLength
 frameRate=config.frameRate
 
 screenSize=config.screenSize
@@ -29,14 +28,10 @@ def gameLoop(p1,p2,clock,tickNumber):
     while not (p1.dead or p2.dead or config.quit):
         tickNumber+=1
         keys=getControls()
-        playersHandler(p1,p2,keys,gameDisplay,tickNumber)
         updateAndDisplayOrbs(orbFactory,(p1,p2),gameDisplay,tickNumber)
-        if tickNumber%gameLength==0:
-            p1.dead=True
-            p2.dead=True
+        playersHandler(p1,p2,keys,gameDisplay,tickNumber)
 
         if tickNumber%config.orbFactoryCallPeriod==0:
-            print("orbFactory called")
             orbFactory.spawnHandler(tickNumber,(p1,p2))
 
 
@@ -59,17 +54,12 @@ def gameLoopWithTitleFade(p1,p2,clock,tickNumber,titleTextBox):
         while not (p1.dead or p2.dead or config.quit or titleTextBox.allLinesInactive):
             titleTextBox.displayActiveLines(gameDisplay)
             titleTextBox.deactivateRandomLine()
-            #print(clock)
             tickNumber+=1
             keys=getControls()
-            playersHandler(p1,p2,keys,gameDisplay,tickNumber)
             updateAndDisplayOrbs(orbFactory,(p1,p2),gameDisplay,tickNumber)
-            if tickNumber%gameLength==0:
-                p1.dead=True
-                p2.dead=True
+            playersHandler(p1,p2,keys,gameDisplay,tickNumber)
 
             if tickNumber%config.orbFactoryCallPeriod==0:
-                print("orbFactory called")
                 orbFactory.spawnHandler(tickNumber,(p1,p2))
 
 

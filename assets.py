@@ -22,7 +22,7 @@ class StalkerAssets:
         self.assumedNeckRadius=1
 
         #lengths where the head and/or tail change type
-        self.transformaitonLengths=[10,15]
+        self.transformaitonLengths=[9,13]
 
     def scaleHead(self,player):
         
