@@ -11,12 +11,13 @@ def scaleToResolution(screenSize):
 
     menuTurningRadius=int(round(100*widthRatio))
 
-    halfOrbHitBox=int(round(15*widthRatio))
+    halfOrbHitBox=int(round(25*widthRatio))
     snakeSpeed=3*widthRatio
 
+    movingOrbThrust=10*widthRatio
     textCharacterWidth=int(round(50*widthRatio))
 
-    return(halfOrbHitBox,normalTurningRadius,menuTurningRadius,snakeSpeed,textCharacterWidth)
+    return(halfOrbHitBox,normalTurningRadius,menuTurningRadius,snakeSpeed,movingOrbThrust,textCharacterWidth)
 
 
 
@@ -45,7 +46,6 @@ class Config:
         self.frameRate=60
 
         self.segmentLength=20
-        self.debug=False
         self.round=5
 
         self.sheildDuration=300
@@ -54,10 +54,9 @@ class Config:
         screenWidth=root.winfo_screenwidth()-100
         screenHeight=root.winfo_screenheight()-100
         screenSize=[screenWidth,screenHeight]
-        #screenSize=[500,500]
         self.screenSize=screenSize
-        self.halfOrbHitbox,self.normalTurningRadius,self.menuTurningRadius,self.snakeSpeed,self.textCharacterWidth=scaleToResolution(screenSize)
-
+        self.halfOrbHitbox,self.normalTurningRadius,self.menuTurningRadius,self.snakeSpeed,self.movingOrbThrust,self.textCharacterWidth=scaleToResolution(screenSize)
+        self.transformationLengths=[10,15]
         #only thing ever changed in game
         self.quit=False
 config=Config()

@@ -36,7 +36,6 @@ def isSpawnLocationOccupied(spawnLocationX,spawnLocationY,players):
     return(False)
 
 def updateAndDisplayOrbs(orbFactory,players,gameDisplay,tickNumber):
-
     for orb in orbFactory.activeStaticSizeChangeOrbs:
         #displays main lines
         for line in orb.lines:
@@ -165,6 +164,11 @@ class OrbFactory:
                         orb=self.inactiveMovingSizeChangeOrbs.pop(0)
                         orb.position[0]=spawnLocationX
                         orb.position[1]=spawnLocaitonY
+
+                        orb.lastWandered=0
+                        orb.velx=0
+                        orb.vely=0
+
                         orb.sizeChange=sizeChange
                         
 
@@ -240,7 +244,6 @@ class _MovingOrb(_Orb):
 
             self.position[0]+=self.velx
             self.position[1]+=self.vely
-
             self.position[0]=self.position[0]%config.screenSize[0]
             self.position[1]=self.position[1]%config.screenSize[1]
     
@@ -277,7 +280,7 @@ class StaticSizeChangeOrb(_StaticOrb):
 
 class MovingSizeChangeOrb(_MovingOrb):
 
-    def __init__(self,startLocationX=-1,startLocationY=-1,sizeChange=0,erraticness=2,thrust=10,mass=100):
+    def __init__(self,startLocationX=-1,startLocationY=-1,sizeChange=0,erraticness=2,thrust=config.movingOrbThrust,mass=100):
         super().__init__(startLocationX,startLocationY,erraticness,thrust,mass)
         self.lines=orbAssets.scaleAndTranslateMovingSizeChangeOrb(2*config.halfOrbHitbox)
         self.pointsLen=len(self.lines)

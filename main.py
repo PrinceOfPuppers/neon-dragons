@@ -37,8 +37,6 @@ def gameLoop(p1,p2,clock,tickNumber):
 
         clock.tick_busy_loop(frameRate)
         pg.display.update()
-        #if not p1.lastTickDashed-tickNumber==0:
-        #    pg.Surface.fill(gameDisplay,(0,0,0))
 
         #this improves visual effect of dashing by not filling the screen for the tick of a dash
         if not (p1.lastTickDashed-tickNumber==0 or p2.lastTickDashed-tickNumber==0):

@@ -50,8 +50,6 @@ Devlopment Goals
 
 -have cut off segments drop an orb proportional to how many segments where cut off 
 
--add different head for player 2
-
 ----------------
 
 

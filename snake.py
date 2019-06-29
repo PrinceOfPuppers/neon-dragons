@@ -3,7 +3,7 @@ from math import sin,cos,pi,sqrt,acos
 import numpy as np
 from config import config
 from orb import orbFactory,updateAndDisplayOrbs
-from assets import stalkerAssets
+from assets import stalkerAssets,watcherAssets
 from random import random,uniform
 
 def isPointOffScreeen(point,config):
@@ -289,18 +289,32 @@ class Snake:
         self.rotVel=self.speed/turningRadius
     
     def grabAssets(self):
-        self.transformaitonLengths=stalkerAssets.transformaitonLengths
-        self.styleType=1
-        for i in range(0,len(self.transformaitonLengths)):
-            if self.length>=self.transformaitonLengths[i]:
-                self.styleType=i+2
-        #fits head to any segmentlength/speed combo
-        self.headSkin,self.neckRadius=stalkerAssets.scaleHead(self)
-        self.headSkinMags=[]
-        self.headSkinAngles=[]
-        self.headSkinLen=len(self.headSkin)
+        if self.playerNumber==1:
+            self.transformaitonLengths=config.transformationLengths
+            self.styleType=1
+            for i in range(0,len(self.transformaitonLengths)):
+                if self.length>=self.transformaitonLengths[i]:
+                    self.styleType=i+2
+            #fits head to any segmentlength/speed combo
+            self.headSkin,self.neckRadius=stalkerAssets.scaleHead(self)
+            self.headSkinMags=[]
+            self.headSkinAngles=[]
+            self.headSkinLen=len(self.headSkin)
+            self.eye,self.iris,self.pupil=stalkerAssets.scaleEye(self)
+        
+        elif self.playerNumber==2:
+            self.transformaitonLengths=config.transformationLengths
+            self.styleType=1
+            for i in range(0,len(self.transformaitonLengths)):
+                if self.length>=self.transformaitonLengths[i]:
+                    self.styleType=i+2
+            #fits head to any segmentlength/speed combo
+            self.headSkin,self.neckRadius=watcherAssets.scaleHead(self)
+            self.headSkinMags=[]
+            self.headSkinAngles=[]
+            self.headSkinLen=len(self.headSkin)
 
-        self.eye,self.iris,self.pupil=stalkerAssets.scaleEye(self)
+            self.eye,self.iris,self.pupil=watcherAssets.scaleEye(self)
 
         self.eyeMags=[]
         self.eyeAngles=[]
@@ -380,7 +394,7 @@ class Snake:
             self.positionListLength=len(self.previousPositions)
             
             if not self.positionListLength==self.segmentLength*(self.length-1)+1:
-                print("decreaseLength error")
+                print("decreaseLength error!")
         
         else:
             #adds dummy data to current point list, they will have the correct info added in update and d
@@ -418,7 +432,6 @@ class Snake:
             self.grabAssets()
 
         
-        
     def _applyAndRecordTickMotion(self):
         self.position[0] += self.speed*sin(self.rot)
         self.position[1] += self.speed*cos(self.rot)
@@ -429,13 +442,15 @@ class Snake:
         self.previousPositions[self.headIndexInPositionList][0]=self.position[0]
         self.previousPositions[self.headIndexInPositionList][1]=self.position[1]
 
-    def dash(self,other,gameDisplay,tickNumber):
-        prevPosition=(self.position[0],self.position[1])
 
-        longEnoughToDash=self.length>=stalkerAssets.transformaitonLengths[0]
+    def dash(self,other,gameDisplay,tickNumber):
+
+        longEnoughToDash=self.length>=self.transformaitonLengths[0]
         dashOffCooldown=tickNumber-self.lastTickDashed>=self.dashCoolDown
 
         if dashOffCooldown and longEnoughToDash:
+            prevPosition=(self.position[0],self.position[1])
+
             for i in range(0,self.dashDistance):
                 didSnakeEatSelf(self)
                 if self.dead:
@@ -447,7 +462,7 @@ class Snake:
                     segmentPosition=self.previousPositions[segmentPositionIndex]
                     self.currentPoints[i][0]=segmentPosition[0]
                     self.currentPoints[i][1]=segmentPosition[1]
-                self.renderSkin(other,gameDisplay,tickNumber)
+                self.renderSkin(gameDisplay,tickNumber)
             
             self.lastTickDashed=tickNumber
             #specialized collision detection to improve dash preformance
@@ -456,7 +471,7 @@ class Snake:
             pg.display.update()
 
     def sheild(self,tickNumber):
-        longEnoughToSheild=self.length>=stalkerAssets.transformaitonLengths[1]
+        longEnoughToSheild=self.length>=self.transformaitonLengths[1]
         sheildOffCoolDown=tickNumber-self.lastSheilded>self.sheildCooldown
 
         if longEnoughToSheild and sheildOffCoolDown:
@@ -473,37 +488,20 @@ class Snake:
             segmentPosition=self.previousPositions[segmentPositionIndex]
             self.currentPoints[i][0]=segmentPosition[0]
             self.currentPoints[i][1]=segmentPosition[1]
-            #renders points directly from previous posisitions, rather than current point list
-            if config.debug:
-                x=int(segmentPosition[0])
-                y=int(segmentPosition[1])
-                colorMod=i/self.length
-                if self.playerNumber==1:
-                    pg.draw.circle(gameDisplay,(255,255,int(colorMod*255)),(x,y),3,1)
 
-                if self.playerNumber==2:
-                    pg.draw.circle(gameDisplay,(255,int(colorMod*255),255),(x,y),3,1)
-        
-        #checks self intersection
+        #checks self intersection and renders skin
         if self.length>2:
             didSnakeEatSelf(self)
+            self.renderSkin(gameDisplay,tickNumber)
         
-        if other.length>2:
-            didSnakeEatSelf(other)
-
-        #checks eating and renders snakes
-        if self.length>2 and other.length>2:
-            self.renderSkin(other,gameDisplay,tickNumber)
-            didEatOtherSnake(self,other) 
+            #checks eating other
+            if other.length>2:
+                didEatOtherSnake(self,other) 
 
             #turns off sheild after its duration runs out
             if self.sheildActive:
                 if tickNumber-self.lastSheilded>self.sheildDuration:
-                    self.sheildActive=False  
-
-            if other.sheildActive:
-                if tickNumber-other.lastSheilded>other.sheildDuration:
-                    other.sheildActive=False  
+                    self.sheildActive=False   
 
         #checks if either player is offscreen
         if isPointOffScreeen(self.position,config):
@@ -556,7 +554,7 @@ class Snake:
         return(previousVec,passPoints)
 
 
-    def renderEye(self,other,gameDisplay,headAngle):
+    def renderEye(self,gameDisplay,headAngle):
         if self.sheildActive:
             color=(255,255,255)
         else:
@@ -588,7 +586,6 @@ class Snake:
         point1Y=self.irisMags[0]*cos(headAngle+self.irisAngles[0])+self.currentPoints[0][1]
         pg.draw.aaline(gameDisplay,color,(point1X,point1Y),(point2X,point2Y))
 
-        pupilDraw=[]
         for i in range(0,self.pupilLen-1):
             point1X=self.pupilMags[i]*sin(headAngle+self.pupilAngles[i])+self.currentPoints[0][0]
             point1Y=self.pupilMags[i]*cos(headAngle+self.pupilAngles[i])+self.currentPoints[0][1]
@@ -607,7 +604,7 @@ class Snake:
             pg.draw.aaline(gameDisplay,(0,0,int(colorMod)),point1,point2)
 
 
-    def renderSkin(self,other,gameDisplay,tickNumber):
+    def renderSkin(self,gameDisplay,tickNumber):
 
         #head color
         if self.sheildActive:
@@ -623,7 +620,7 @@ class Snake:
         #first render head and eye seperatly
         headVec=(self.currentPoints[0][0]-self.currentPoints[1][0],self.currentPoints[0][1]-self.currentPoints[1][1])
         headAngle=-1*round(giveAngleSigned(headVec,(0,1)),config.round)
-        self.renderEye(other,gameDisplay,headAngle)
+        self.renderEye(gameDisplay,headAngle)
         self.renderStripe(gameDisplay)
 
         for i in range(0,self.headSkinLen-1):
