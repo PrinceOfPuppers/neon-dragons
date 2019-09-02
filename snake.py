@@ -491,7 +491,7 @@ class Snake:
 
         #checks self intersection and renders skin
         if self.length>2:
-            didSnakeEatSelf(self)
+
             self.renderSkin(gameDisplay,tickNumber)
         
             #checks eating other
@@ -501,7 +501,9 @@ class Snake:
             #turns off sheild after its duration runs out
             if self.sheildActive:
                 if tickNumber-self.lastSheilded>self.sheildDuration:
-                    self.sheildActive=False   
+                    self.sheildActive=False  
+
+            didSnakeEatSelf(self)
 
         #checks if either player is offscreen
         if isPointOffScreeen(self.position,config):

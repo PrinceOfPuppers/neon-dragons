@@ -16,7 +16,7 @@ screenSize=config.screenSize
 orbFactory.initalizePools()
 gameDisplay = pg.display.set_mode((config.screenSize[0], config.screenSize[1]))
 pg.init()
-pg.display.set_caption("")
+pg.display.set_caption("Neon Dragons")
 
 
 
@@ -37,6 +37,7 @@ def gameLoop(p1,p2,clock,tickNumber):
 
         clock.tick_busy_loop(frameRate)
         pg.display.update()
+
 
         #this improves visual effect of dashing by not filling the screen for the tick of a dash
         if not (p1.lastTickDashed-tickNumber==0 or p2.lastTickDashed-tickNumber==0):
